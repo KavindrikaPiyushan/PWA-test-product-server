@@ -23,10 +23,10 @@ app.use(cookieParser());
 const createDbConnection = async () => {
   try {
     const connection = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '1234',
-      database: 'testdb',
+      host: 'b9ew18j0gtglkb1lhcyk-mysql.services.clever-cloud.com',
+      user: 'uvx4n4ptboporros',
+      password: 'fbbLoGK3clhAux4PUyBT',
+      database: 'b9ew18j0gtglkb1lhcyk',
     });
     console.log('MySQL Connected...');
     return connection;
@@ -62,6 +62,66 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
+
+// Function to initialize database schema
+const initializeDatabase = async () => {
+  try {
+    // Create `users` table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100)
+      )
+    `);
+
+    // Create `auth` table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS auth (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL
+      )
+    `);
+
+    // Create `user_login_audit` table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS user_login_audit (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT,
+        login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ip_address VARCHAR(255),
+        user_agent VARCHAR(255),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // Create `subscriptions` table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        license_key VARCHAR(255) UNIQUE NOT NULL,
+        plan VARCHAR(50) NOT NULL,
+        start_date DATETIME NOT NULL,
+        end_date DATETIME NOT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        last_verified DATETIME DEFAULT NULL
+      )
+    `);
+
+    console.log('Database tables initialized successfully.');
+  } catch (err) {
+    console.error('Error initializing database tables:', err);
+    process.exit(1);
+  }
+};
+
+// Initialize DB connection and schema
+(async () => {
+  db = await createDbConnection();
+  await initializeDatabase();
+})();
 
 // 📝 REGISTER
 app.post('/register', async (req, res) => {
