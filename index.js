@@ -13,7 +13,7 @@ const PORT = 5000;
 
 // Middleware
 app.use(cors({
-  origin: 'https://wondrous-sable-0f6ae9.netlify.app',
+  origin: '*',
   credentials: true,
 }));
 app.use(express.json());
